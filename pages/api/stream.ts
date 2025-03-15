@@ -10,7 +10,7 @@ type MessageType = {
 type Client = { res: NextApiResponse; roomId: string };
 
 export let clients: Client[] = []; // Explicitly define client type
-export let chatRooms: Record<string, MessageType[]> = {}; // Store messages per room
+export const chatRooms: Record<string, MessageType[]> = {}; // Store messages per room
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "GET") {

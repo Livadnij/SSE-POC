@@ -1,4 +1,3 @@
-import SSEClient from "@/components/SSEClient";
 import UsernamePopup from "@/components/UsernamePopup";
 import { getRandomInRange } from "@/helpers/getRandomInRange";
 import { useRouter } from "next/router";

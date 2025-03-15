@@ -1,10 +1,9 @@
+"use client";
+
 import { FC, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { unixConvertation } from "@/helpers/unixConvertation";
-import { notFound } from "next/navigation";
 import { useUser } from "@/context/UserContext";
-
-type IndexProps = {};
 
 type ChatProps = {
   username: string;
@@ -13,14 +12,50 @@ type ChatProps = {
   unixTime: number;
 };
 
-const RoomPage: FC<IndexProps> = ({}) => {
+const RoomPage: FC = () => {
   const [chat, setChat] = useState<ChatProps[]>([]);
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { id } = router.query;
   const { username } = useUser();
 
-  if (!username) router.push("/");
+  useEffect(() => {
+    if (!username) {
+      router.push("/");
+    } else {
+      setLoading(false);
+    }
+  }, [username, router]);
+
+  useEffect(() => {
+    if (id) {
+      const eventSource = new EventSource(`/api/stream?roomId=${id}`);
+
+      eventSource.onmessage = (event) => {
+        console.log(event.data);
+        setChat((prev) => [...prev, JSON.parse(event.data)]);
+      };
+
+      eventSource.onerror = (err) => {
+        console.error("SSE Error:", err);
+        eventSource.close();
+      };
+
+      handleSendMessage(`joined chat`);
+
+      return () => {
+        console.log("Closing SSE connection");
+        eventSource.close();
+      };
+    } else {
+      // Handle the case where id is not available (e.g., initial render).
+      // You can choose to do nothing or set up a default behavior.
+      console.log("Room ID not available yet.");
+    }
+  }, [id, username]);
+
+  if (loading || !id) return <div>Loading...</div>;
 
   const handleSendMessage = async (newMessage: string) => {
     const unixTime = Date.now();
@@ -35,7 +70,6 @@ const RoomPage: FC<IndexProps> = ({}) => {
     console.log(data);
 
     try {
-      // Send POST request to the Next.js API route
       const response = await fetch("/api/message", {
         method: "POST",
         headers: {
@@ -45,32 +79,11 @@ const RoomPage: FC<IndexProps> = ({}) => {
       });
 
       const result = await response.json();
-      console.log(result); // Handle the response from the backend
+      console.log(result);
     } catch (error) {
       console.error("Error sending data:", error);
     }
   };
-
-  useEffect(() => {
-    const eventSource = new EventSource(`/api/stream?roomId=${id}`);
-
-    eventSource.onmessage = (event) => {
-      console.log(event.data);
-      setChat((prev) => [...prev, JSON.parse(event.data)]);
-    };
-
-    eventSource.onerror = (err) => {
-      console.error("SSE Error:", err);
-      eventSource.close();
-    };
-
-    handleSendMessage(`joined chat`);
-
-    return () => {
-      console.log("Closing SSE connection");
-      eventSource.close();
-    };
-  }, [username]);
 
   return (
     <div
