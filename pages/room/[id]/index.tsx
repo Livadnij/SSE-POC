@@ -57,7 +57,7 @@ const RoomPage: FC = () => {
 
   if (loading || !id) return <div>Loading...</div>;
 
-  const handleSendMessage = async (newMessage: string) => {
+  async function handleSendMessage(newMessage: string) {
     const unixTime = Date.now();
 
     const data = {
@@ -83,7 +83,7 @@ const RoomPage: FC = () => {
     } catch (error) {
       console.error("Error sending data:", error);
     }
-  };
+  }
 
   return (
     <div
