@@ -3,7 +3,6 @@
 import { FC, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { unixConvertation } from "@/helpers/unixConvertation";
-import { useUser } from "@/context/UserContext";
 
 type ChatProps = {
   username: string;
@@ -14,19 +13,10 @@ type ChatProps = {
 
 const RoomPage: FC = () => {
   const [chat, setChat] = useState<ChatProps[]>([]);
+  const [username, setUsername] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(true);
   const router = useRouter();
   const { id } = router.query;
-  const { username } = useUser();
-
-  useEffect(() => {
-    if (!username) {
-      router.push("/");
-    } else {
-      setLoading(false);
-    }
-  }, [username, router]);
 
   useEffect(() => {
     if (id) {
@@ -49,13 +39,9 @@ const RoomPage: FC = () => {
         eventSource.close();
       };
     } else {
-      // Handle the case where id is not available (e.g., initial render).
-      // You can choose to do nothing or set up a default behavior.
       console.log("Room ID not available yet.");
     }
-  }, [id, username]);
-
-  if (loading || !id) return <div>Loading...</div>;
+  }, [id]);
 
   async function handleSendMessage(newMessage: string) {
     const unixTime = Date.now();
@@ -66,8 +52,6 @@ const RoomPage: FC = () => {
       message: newMessage,
       unixTime,
     };
-
-    console.log(data);
 
     try {
       const response = await fetch("/api/message", {
@@ -112,6 +96,7 @@ const RoomPage: FC = () => {
           </li>
         ))}
       </ul>
+
       <textarea
         style={{ width: "100%" }}
         placeholder="message"
@@ -121,13 +106,26 @@ const RoomPage: FC = () => {
           setMessage(e.target.value);
         }}
       />
-      <button
-        onClick={() => {
-          handleSendMessage(message);
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "row",
+          justifyContent: "space-between",
         }}
       >
-        Send
-      </button>
+        <input
+          placeholder="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+        />
+        <button
+          onClick={() => {
+            handleSendMessage(message);
+          }}
+        >
+          Send
+        </button>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import { NextApiRequest, NextApiResponse } from "next";
-import { clients, chatRooms } from "./stream";
+import { handleMessage } from "./stream"; // Import the message handler
 
 type MessageType = {
   username: string;
@@ -8,26 +8,24 @@ type MessageType = {
   unixTime: number;
 };
 
-export default function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") {
     return res.status(405).json({ message: "Method Not Allowed" });
   }
 
-  const { username, roomId, message, unixTime }: MessageType = req.body;
-  if (!username || !roomId || !message || !unixTime) {
-    return res.status(400).json({ message: "Invalid data" });
+  const { roomId, username, message, unixTime } = req.body;
+
+  if (!roomId || !username || !message || !unixTime) {
+    return res.status(400).json({ message: "Missing fields" });
   }
 
   const newMessage: MessageType = { username, message, roomId, unixTime };
 
-  if (!chatRooms[roomId]) chatRooms[roomId] = [];
-  chatRooms[roomId].push(newMessage);
+  // Store and broadcast the message
+  handleMessage(roomId, newMessage);
 
-  clients.forEach((client) => {
-    if (client.roomId === roomId) {
-      client.res.write(`data: ${JSON.stringify(newMessage)}\n\n`);
-    }
-  });
-
-  res.status(200).json({ message: "Message sent successfully" });
+  return res.status(200).json({ message: "Message sent to room" });
 }
