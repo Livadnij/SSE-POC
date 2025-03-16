@@ -6,7 +6,7 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   return (
-    <div style={{ width: "500px", justifySelf: "center" }}>{children}</div>
+    <div style={{ maxWidth: "500px", justifySelf: "center" }}>{children}</div>
   );
 };
 
