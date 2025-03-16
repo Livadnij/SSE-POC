@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-const SERVER_URL = "ws://localhost:8080";
+const SERVER_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const App: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [matchOver, setMatchOver] = useState(false);
 
   useEffect(() => {
+    if (!SERVER_URL) return;
     const socket = new WebSocket(SERVER_URL);
 
     socket.onopen = () => console.log("Connected to server");
